@@ -3,7 +3,7 @@ Reference:
   https://maxembedded.wordpress.com/2011/06/22/introduction-to-avr-timers/
 
   Configuring timer
-  
+
   Timer Count = (Required Delay / ClockTimePeriod)
   
   CPU clock = 16 MHz
@@ -12,12 +12,8 @@ Reference:
   When register is filled 65535 bits, counter starts from begin this is called overflow
   
   Time Period = 1/ Frequency, Frequency = 4MHz
-  
-  
   Flash LED every 2 seconds at a frequency of 0.5Hz. We have an XTAL of 16MHz
-  
   Timer count = (Required delay/ clock Time Period) - 1
-  
   
   HC-SR04
   Ranging distance: 2cm - 400cm
@@ -42,9 +38,10 @@ const int detectionRate = 30; // Area counted where the sample value can differ,
 
 boolean calibrateSuccess = false;
 
-int sampleTable[sampleTableSize];
+int sampleTable[sampleTableSize]; // Table for samples
 int sampleTableCount = 0;  // Tells us size of sampleTable
 
+// Initialize hardware
 void setup() {
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
@@ -73,7 +70,7 @@ ISR(TIMER1_COMPA_vect) {
    }
 }
 
-
+// Tells sensor to send ultravawe and read the distance.
 int readDistance() {
  
  long duration = 0;
@@ -86,20 +83,14 @@ int readDistance() {
  
  duration = pulseIn(echoPin, HIGH);
  distance = duration * 0.034/2;
- /*
- Serial.print("Distance: ");
- Serial.print(distance);
- Serial.print("cm");
- Serial.println("");
- */
- //delay(100);
+
  return distance;
  
 }
 
-// Take hunder samples, and if distance stays equal define value as infinity
+// Take hundred samples. If distance stays equal define value as infinity
 void calibrate() {
-  //Serial.println("Calibrating");
+
   Serial2.println("Calibrating");
   int lowest = 0;
   int highest = 0;
@@ -132,14 +123,14 @@ void calibrate() {
   }
   infinityValue = sample;
   calibrateSuccess = true;
-  //Serial.print("Calibration success ");
-  //Serial.println(infinityValue);
-  
+
   Serial2.print("Calibration success ");
   Serial2.println(infinityValue);
   // Get lowest and highest point;
 }
 
+// Detect if anything happens
+// If conditions are met, start taking samples
 boolean detectAction() {
   // Detect if something is happening
   int sample = readDistance();
@@ -157,17 +148,16 @@ boolean detectAction() {
 
 // Start timer 1
 void timerStart() {
-  //Serial.println("Timer 1 started");
   timer = 0;
   timerEnabled = true;
 }
 
 // Stop timer 1
 void timerStop() {
-  //Serial.println("Timer 1 stop");
   timerEnabled = false;
 }
 // Take samples until 10 sample points reaches infinity
+// Infinity means nothing is obstructing or reflecting ultrasound back to sensor
 int filterDistance() {
   boolean finished = false;
   timerStart();
@@ -199,6 +189,7 @@ int filterDistance() {
   timerStop();
 }
 
+// Find lowest point from taken samples
 int getLowPoint() {
   int lowPoint = 0;
   for(int i = 0; i < sampleTableCount; i++) {
@@ -213,6 +204,7 @@ int getLowPoint() {
   return lowPoint;
 }
 
+// Find highest point from samples
 int getHighPoint() {
   int highPoint = 0;
   for(int i = 0; i < sampleTableCount; i++) {
@@ -228,6 +220,7 @@ int getHighPoint() {
   return highPoint;
 }
 
+// Calculate avarage point from samples
 int getAvg() {
   long sum = 0;
   int count = 0;;
